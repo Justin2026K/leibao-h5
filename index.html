@@ -664,13 +664,24 @@
         showToast(`✓ 提交成功！意向颜色：${currentColor.name}，我们会尽快联系`, false);
 
         // 可选：如果需要将数据同步到您的远程服务器，请取消注释并替换URL
-        
-        try {
-            await fetch('https://1424129187-icj6omd9y7.ap-guangzhou.tencentscf.com', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(leadRecord)
-            });
+       <script>
+    // ... 提交逻辑 ...
+    // 关键部分：将请求地址改为你的 Vercel 函数地址
+    const YOUR_WEBHOOK_URL = "/api/submit";
+    try {
+        await fetch(YOUR_WEBHOOK_URL, { // 现在会请求你的后端函数
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                phoneNumber: phone,
+                colorName: currentColor.name,
+            })
+        });
+        // ...
+    } catch(err) {
+        // ...
+    }
+</script>
         } catch(e) { console.warn('远程同步失败'); }
         
     }
