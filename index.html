@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>商品展示 | 意向收集 · 6图滑动</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #f5f7fb;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, 'Noto Sans', sans-serif;
+            padding: 20px 16px 40px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            padding: 20px 20px 32px;
+        }
+
+        /* 轮播图区域 */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            border-radius: 28px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            background: #f1f4f9;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .carousel-wrapper {
+            overflow: hidden;
+            touch-action: pan-y pinch-zoom;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            will-change: transform;
+        }
+
+        .carousel-slide {
+            flex-shrink: 0;
+            width: 100%;
+            height:680px;
+            aspect-ratio: 1 / 1;
+            background: #eef2ff;
+        }
+
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+        }
+
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 0 8px;
+            background: transparent;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #cbd5e1;
+            border-radius: 10px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            width: 24px;
+            background: #fd7537;
+        }
+
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(4px);
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e293b;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: 0.2s;
+        }
+        .carousel-arrow:active { background: white; transform: translateY(-50%) scale(0.95);}
+        .arrow-left { left: 12px; }
+        .arrow-right { right: 12px; }
+
+        .product-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ff752a;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+        .product-price {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #3b82f6;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .product-desc {
+            font-size: 1.0rem;
+            font-weight: 600;
+            color: #242424;
+            line-height: 1.4;
+            margin-bottom: 24px;
+            border-left: 3px solid #e2e8f0;
+            padding-left: 12px;
+        }
+
+        /* 颜色选择 - 只有3个选项 */
+        .color-section {
+            margin-bottom: 28px;
+        }
+        .section-label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .color-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .color-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        .color-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 60px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 3px solid white;
+            outline: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .color-item.selected .color-circle {
+            outline: 3px solid #ff752a;
+            border-color: white;
+            transform: scale(1.02);
+            box-shadow: 0 6px 14px rgba(59,130,246,0.3);
+        }
+        .color-name {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #334155;
+        }
+        .color-item.selected .color-name {
+            color: #ff752a;
+            font-weight: 600;
+        }
+
+        /* 表单区域 */
+        .form-section {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 20px 16px;
+            margin: 20px 0 12px;
+        }
+        .input-group {
+            margin-bottom: 18px;
+        }
+        .input-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: block;
+            color: #1e293b;
+        }
+        .phone-input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
+            border-radius: 60px;
+            background: white;
+            transition: 0.2s;
+            outline: none;
+            font-family: inherit;
+        }
+        .phone-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        .submit-btn {
+            width: 100%;
+            background: #ff752a;
+            color: white;
+            border: none;
+            padding: 14px 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+            box-shadow: 0 4px 8px rgba(59,130,246,0.2);
+        }
+        .submit-btn:active {
+            transform: scale(0.97);
+            background: #d45611;
+        }
+
+        .toast-msg {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: #1e293b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            pointer-events: none;
+            z-index: 1000;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+
+        /* 后台管理面板 */
+        .admin-panel {
+            margin-top: 32px;
+            background: #f1f5f9;
+            border-radius: 24px;
+            padding: 18px 16px;
+            border: 1px solid #e2e8f0;
+        }
+        .admin-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .action-btn {
+            background: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #334155;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .clear-btn {
+            color: #dc2626;
+        }
+        .leads-list {
+            max-height: 280px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+        }
+        .lead-item {
+            background: white;
+            border-radius: 18px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .lead-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .lead-phone {
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .lead-color {
+            font-size: 0.7rem;
+            background: #eef2ff;
+            padding: 2px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            width: fit-content;
+            color: #1e40af;
+        }
+        .lead-time {
+            font-size: 0.65rem;
+            color: #64748b;
+        }
+        .empty-leads {
+            text-align: center;
+            color: #94a3b8;
+            padding: 20px;
+            font-size: 0.8rem;
+        }
+        .note {
+            font-size: 0.7rem;
+            color: #6c7a91;
+            text-align: center;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 轮播图区域：6张商品图片，支持触摸滑动+箭头 -->
+    <div class="carousel-container">
+        <div class="carousel-wrapper">
+            <div class="carousel-track" id="carouselTrack"></div>
+        </div>
+        <div class="carousel-dots" id="carouselDots"></div>
+        <div class="carousel-arrow arrow-left" id="prevBtn">‹</div>
+        <div class="carousel-arrow arrow-right" id="nextBtn">›</div>
+    </div>
+
+    <div class="product-title">全新雷豹 · 2026款</div>
+   <!-- <div class="product-price">
+        <span class="price-symbol">¥</span> 329
+        <span style="font-size: 0.8rem; font-weight: normal; color: #8ba0bc;">起</span>
+    </div>-->
+    <div class="product-desc">
+        ① 动力持久·液冷强力电机  |  ② 安全硬核·液压碟刹 
+    </div>
+    <div class="product-desc">
+        ③ 设计感·前脸灯光系统  |  ④ 智能高清·液晶显示屏
+    </div>
+
+    <!-- 颜色选择：只有3种颜色 -->
+    <div class="color-section">
+        <div class="section-label">
+            <span>🎨 选择您的偏好颜色</span>
+            <span id="selectedColorLabel" style="font-size:0.75rem; background:#eef2ff; padding:2px 10px; border-radius:20px;">未选</span>
+        </div>
+        <div class="color-options" id="colorOptionsContainer"></div>
+    </div>
+
+    <!-- 手机号表单 -->
+    <div class="form-section">
+        <div class="input-group">
+            <label class="input-label">📱 手机号码</label>
+            <input type="tel" id="phoneNumber" class="phone-input" placeholder="请输入手机号" maxlength="11" inputmode="numeric">
+        </div>
+        <button class="submit-btn" id="submitLeadBtn">提交意向 & 获取专属优惠</button>
+        <div class="note">提交后我们将联系您，手机号严格保密，敬请放心</div>
+    </div>
+
+    <!-- 后台管理面板（查看所有提交的手机号+颜色） 
+    <div class="admin-panel">
+        <div class="admin-title">
+            <span>📋 后台 · 意向客户列表</span>
+            <div class="admin-actions">
+                <button class="action-btn" id="exportLeadsBtn">📎 导出数据</button>
+                <button class="action-btn clear-btn" id="clearLeadsBtn">🗑 清空记录</button>
+            </div>
+        </div>
+        <div id="leadsListContainer" class="leads-list">
+            <div class="empty-leads">暂无客户提交意向</div>
+        </div>
+        <div class="note">
+            💡 当前数据保存在您的浏览器本地。如需跨设备/多人统一收集，请参考部署说明中的「云端收集配置」。
+        </div>
+    </div>-->
+</div>
+<div id="toastMsg" class="toast-msg"></div>
+
+<script>
+    // ------------------------------
+    // 1. 轮播图：6张高质量商品图片（可替换成您自己的图片链接）
+    // ------------------------------
+    const carouselImages = [
+        "https://i.imgur.com/iI3oYd4.jpeg",   // 经典办公/包
+        "https://i.imgur.com/Qm6s4Ff.jpeg",   // 街拍
+        "https://i.imgur.com/xKTcv3F.jpeg",   // 自然
+        "https://i.imgur.com/vKqLV3j.jpeg",   // 咖啡
+        "https://i.imgur.com/0UgX5wA.jpeg",   // 建筑
+        "https://i.imgur.com/dR30uON.jpeg",   // 亮黑色
+        "https://i.imgur.com/fpVkZLW.jpeg",   // 磨砂黑
+        "https://i.imgur.com/76aViMT.jpeg",   // 科技灰
+    ];
+    let currentIndex = 0;
+    let track, dotsContainer;
+    let startX = 0, moveX = 0, isDragging = false, startTranslate = 0;
+    let currentTranslate = 0;
+
+    function initCarousel() {
+        track = document.getElementById('carouselTrack');
+        dotsContainer = document.getElementById('carouselDots');
+        if (!track) return;
+        track.innerHTML = '';
+        carouselImages.forEach((src) => {
+            const slide = document.createElement('div');
+            slide.className = 'carousel-slide';
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = '商品展示图';
+            slide.appendChild(img);
+            track.appendChild(slide);
+        });
+        // 生成dots
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < carouselImages.length; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            if (i === currentIndex) dot.classList.add('active');
+            dot.addEventListener('click', () => goToSlide(i));
+            dotsContainer.appendChild(dot);
+        }
+        updateCarouselTransform();
+        bindCarouselEvents();
+    }
+
+    function updateCarouselTransform() {
+        const slideWidth = track.parentElement.clientWidth;
+        currentTranslate = -currentIndex * slideWidth;
+        track.style.transform = `translateX(${currentTranslate}px)`;
+        const dots = document.querySelectorAll('.dot');
+        dots.forEach((dot, idx) => {
+            if (idx === currentIndex) dot.classList.add('active');
+            else dot.classList.remove('active');
+        });
+    }
+
+    function goToSlide(index) {
+        if (index < 0) index = 0;
+        if (index >= carouselImages.length) index = carouselImages.length - 1;
+        currentIndex = index;
+        updateCarouselTransform();
+    }
+
+    function nextSlide() { goToSlide(currentIndex + 1); }
+    function prevSlide() { goToSlide(currentIndex - 1); }
+
+    function bindCarouselEvents() {
+        const wrapper = document.querySelector('.carousel-wrapper');
+        if (!wrapper) return;
+        wrapper.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+            startTranslate = currentTranslate;
+            track.style.transition = 'none';
+        });
+        wrapper.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            moveX = e.touches[0].clientX - startX;
+            let newTranslate = startTranslate + moveX;
+            const maxTranslate = 0;
+            const minTranslate = -(carouselImages.length - 1) * wrapper.clientWidth;
+            if (newTranslate > maxTranslate) newTranslate = maxTranslate * 0.3;
+            if (newTranslate < minTranslate) newTranslate = minTranslate * 0.3;
+            track.style.transform = `translateX(${newTranslate}px)`;
+        });
+        wrapper.addEventListener('touchend', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            track.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
+            const moved = moveX;
+            const threshold = 50;
+            if (Math.abs(moved) > threshold) {
+                if (moved > 0) prevSlide();
+                else nextSlide();
+            } else {
+                updateCarouselTransform();
+            }
+            startX = 0; moveX = 0;
+        });
+        document.getElementById('prevBtn').addEventListener('click', prevSlide);
+        document.getElementById('nextBtn').addEventListener('click', nextSlide);
+        window.addEventListener('resize', () => updateCarouselTransform());
+    }
+
+    // ------------------------------
+    // 2. 颜色选项：仅3种颜色（与图片无关）
+    // ------------------------------
+    const colors = [
+        { id: "sand", name: "亮黑色", bgColor: "#080708", selected: true },
+        { id: "mint", name: "磨砂黑", bgColor: "#1d1f23" },
+        { id: "gray", name: "科技灰", bgColor: "#3e4044" }
+    ];
+    let currentColor = colors.find(c => c.selected === true) || colors[0];
+
+    const colorOptionsContainer = document.getElementById('colorOptionsContainer');
+    const selectedColorLabelSpan = document.getElementById('selectedColorLabel');
+    const phoneInput = document.getElementById('phoneNumber');
+    const submitBtn = document.getElementById('submitLeadBtn');
+    const leadsListContainer = document.getElementById('leadsListContainer');
+    const clearLeadsBtn = document.getElementById('clearLeadsBtn');
+    const exportLeadsBtn = document.getElementById('exportLeadsBtn');
+    const toastMsgDiv = document.getElementById('toastMsg');
+
+    let leadsArray = [];
+
+    function showToast(message, isError = false) {
+        toastMsgDiv.textContent = message;
+        toastMsgDiv.style.background = isError ? '#dc2626' : '#1e293b';
+        toastMsgDiv.classList.add('show');
+        setTimeout(() => toastMsgDiv.classList.remove('show'), 2200);
+    }
+
+    function renderColorOptions() {
+        colorOptionsContainer.innerHTML = '';
+        colors.forEach(color => {
+            const colorItem = document.createElement('div');
+            colorItem.className = 'color-item';
+            if (currentColor && currentColor.id === color.id) colorItem.classList.add('selected');
+            const circle = document.createElement('div');
+            circle.className = 'color-circle';
+            circle.style.backgroundColor = color.bgColor;
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'color-name';
+            nameSpan.innerText = color.name;
+            colorItem.appendChild(circle);
+            colorItem.appendChild(nameSpan);
+            colorItem.addEventListener('click', () => {
+                if (currentColor.id === color.id) return;
+                currentColor = color;
+                document.querySelectorAll('.color-item').forEach(item => item.classList.remove('selected'));
+                colorItem.classList.add('selected');
+                selectedColorLabelSpan.innerText = color.name;
+                showToast(`已选择「${color.name}」`, false);
+            });
+            colorOptionsContainer.appendChild(colorItem);
+        });
+        selectedColorLabelSpan.innerText = currentColor.name;
+    }
+
+    // 本地存储
+    function saveLeadsToStorage() {
+        localStorage.setItem('product_leads_v3', JSON.stringify(leadsArray));
+    }
+
+    function loadLeadsFromStorage() {
+        const stored = localStorage.getItem('product_leads_v3');
+        if (stored) {
+            try {
+                leadsArray = JSON.parse(stored);
+                if (!Array.isArray(leadsArray)) leadsArray = [];
+            } catch(e) { leadsArray = []; }
+        } else {
+            leadsArray = [];
+        }
+        renderLeadsList();
+    }
+
+    function renderLeadsList() {
+        if (!leadsListContainer) return;
+        if (leadsArray.length === 0) {
+            leadsListContainer.innerHTML = '<div class="empty-leads">✨ 暂无客户提交意向，等待新线索</div>';
+            return;
+        }
+        const sorted = [...leadsArray].reverse();
+        leadsListContainer.innerHTML = '';
+        sorted.forEach((lead, idx) => {
+            const leadDiv = document.createElement('div');
+            leadDiv.className = 'lead-item';
+            const phoneShow = lead.phoneNumber || '未知';
+            const colorShow = lead.colorName || '未选颜色';
+            const timeStr = lead.submitTime ? new Date(lead.submitTime).toLocaleString('zh-CN', {hour12: false}) : '刚刚';
+            leadDiv.innerHTML = `
+                <div class="lead-info">
+                    <div class="lead-phone">📞 ${phoneShow}</div>
+                    <div><span class="lead-color">🎨 意向颜色: ${colorShow}</span></div>
+                    <div class="lead-time">⏱️ ${timeStr}</div>
+                </div>
+                <button class="action-btn clear-btn" data-lead-key="${lead.key || idx}" style="background:#fee2e2; padding:4px 10px;">删除</button>
+            `;
+            const delBtn = leadDiv.querySelector('.clear-btn');
+            if (delBtn) {
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const originalIndex = leadsArray.findIndex(l => l.key === lead.key);
+                    if (originalIndex !== -1) leadsArray.splice(originalIndex, 1);
+                    else leadsArray.splice(leadsArray.indexOf(lead), 1);
+                    saveLeadsToStorage();
+                    renderLeadsList();
+                    showToast('已删除一条意向记录', false);
+                });
+            }
+            leadsListContainer.appendChild(leadDiv);
+        });
+    }
+
+    function generateKey() {
+        return Date.now() + '-' + Math.random().toString(36).substr(2, 8);
+    }
+
+    async function submitLead() {
+        let phone = phoneInput.value.trim();
+        if (!phone) {
+            showToast('请填写手机号码', true);
+            return;
+        }
+        const phoneRegex = /^1[3-9]\d{9}$/;
+        if (!phoneRegex.test(phone)) {
+            showToast('请输入正确的11位手机号码', true);
+            return;
+        }
+        if (!currentColor) {
+            showToast('请选择颜色偏好', true);
+            return;
+        }
+
+        const leadRecord = {
+            key: generateKey(),
+            phoneNumber: phone,
+            colorName: currentColor.name,
+            colorId: currentColor.id,
+            submitTime: Date.now(),
+        };
+        leadsArray.push(leadRecord);
+        saveLeadsToStorage();
+        renderLeadsList();
+        phoneInput.value = '';
+        showToast(`✓ 提交成功！意向颜色：${currentColor.name}，我们会尽快联系`, false);
+
+        // 可选：如果需要将数据同步到您的远程服务器，请取消注释并替换URL
+        
+        try {
+            await fetch('https://1424129187-icj6omd9y7.ap-guangzhou.tencentscf.com', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(leadRecord)
+            });
+        } catch(e) { console.warn('远程同步失败'); }
+        
+    }
+
+    function clearAllLeads() {
+        if (leadsArray.length === 0) {
+            showToast('暂无数据可清除', false);
+            return;
+        }
+        if (confirm('⚠️ 确认清空所有意向记录吗？数据不可恢复。')) {
+            leadsArray = [];
+            saveLeadsToStorage();
+            renderLeadsList();
+            showToast('已清空所有意向记录', false);
+        }
+    }
+
+    function exportLeads() {
+        if (leadsArray.length === 0) {
+            showToast('暂无数据可导出', true);
+            return;
+        }
+        const dataStr = JSON.stringify(leadsArray, null, 2);
+        const blob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `customer_leads_${new Date().toISOString().slice(0,19)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('导出成功，已保存JSON文件', false);
+    }
+
+    phoneInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0,11);
+    });
+
+    function init() {
+        initCarousel();
+        renderColorOptions();
+        loadLeadsFromStorage();
+        submitBtn.addEventListener('click', submitLead);
+        clearLeadsBtn.addEventListener('click', clearAllLeads);
+        exportLeadsBtn.addEventListener('click', exportLeads);
+    }
+    init();
+</script>
+</body>
+</html>
